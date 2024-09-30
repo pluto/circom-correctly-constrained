@@ -153,6 +153,17 @@ Circomscribe's announcement blog post briefly introduces the tool.
 
 
 
+### [Picus QED uniqueness property underconstraint checker](https://github.com/Veridise/Picus)
+Picus is a tool by Veridise for checking under-constrained signals of circuits. I couldn't install Picus (in a half hour of trying). The docker build script fails for me with error:
+```
+ERROR: failed to solve: process "/bin/bash -c raco make picus.rkt" did not complete successfully: failed to create endpoint m4k1rddek6olk2zpiynatvsz5 on network bridge: failed to add the host (veth7b01635) <=> sandbox (veth4ac65fd) pair interfaces: operation not supported
+```
+
+I tried a few things including restarting my Docker daemon, then attempting a build from scratch by installing z3 and cvc5, but these took too long, so I'm moving on after leaving an issue. Just kidding, they disabled issues for their repo, big oof.
+
+It could be worthwhile to come back and try to get this tool to work, but it's hard to say whether the tool is actually user-ready.
+
+
 ## License
 
 Licensed under the Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
