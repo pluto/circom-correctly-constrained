@@ -48,11 +48,110 @@ This repo is a reference on correctly testing and constraining circom circuits, 
 - run: `circomspect $CIRCUIT_PATH`
     - e.g.: `circomspect circuits/multiplier.circom`. `circomspect` will flag underconstrained templates, but will not flag the overconstrained circuit.
 
-More about circomspect by Trail of Bits. These blog posts briefly describe the tool and a few of the passes performed by `circomspect`. They are summaries of the `circomspect` in context, but not important for using the tool.
+`circomspect` seems powerful and straightforward to use, requiring very little extra context for the developer to use the tool.
+
+More about circomspect by Trail of Bits, in a few blog posts. These blog posts briefly describe the tool and a few of the passes performed by `circomspect`. They are summaries of the `circomspect` in context, but not important for using the tool.
 - [ToB blog: it pays to be circomspect](https://blog.trailofbits.com/2022/09/15/it-pays-to-be-circomspect/)
 - [ToB blog: circomspect has more passes](https://blog.trailofbits.com/2023/03/21/circomspect-static-analyzer-circom-more-passes/)
 
-It would be good if there were CI to run circomspect, but that does not currently seem to be available.
+It would be good if there were CI to run circomspect, but that does not currently seem to be available. There is no fast way to install circomspect, so it would be slightly costly to run in CI today.
+
+Circomspect produces the following output on `multiplier.circom`:
+```sh
+❯ circomspect circuits/multiplier.circom 
+circomspect: analyzing template 'Multiplier'
+circomspect: analyzing template 'OverconstrainedMultiplier'
+
+circomspect: analyzing template 'UnderconstrainedMultiplier1'
+warning: Using the signal assignment operator `<--` is not necessary here.
+   ┌─ /home/thor/tmp/circom-correctly-constrained/circuits/multiplier.circom:33:5
+   │
+33 │     intermediary <-- a * b;
+   │     ^^^^^^^^^^^^^^^^^^^^^^ The expression assigned to `intermediary` is quadratic.
+   │
+   = Consider rewriting the statement using the constraint assignment operator `<==`.
+   = For more details, see https://github.com/trailofbits/circomspect/blob/main/doc/analysis_passes.md#unnecessary-signal-assignment.
+
+warning: Intermediate signals should typically occur in at least two separate constraints.
+   ┌─ /home/thor/tmp/circom-correctly-constrained/circuits/multiplier.circom:31:5
+   │
+31 │     signal intermediary;
+   │     ^^^^^^^^^^^^^^^^^^^ The intermediate signal `intermediary` is declared here.
+   ·
+34 │     c <== intermediary;
+   │     ------------------ The intermediate signal `intermediary` is constrained here.
+   │
+   = For more details, see https://github.com/trailofbits/circomspect/blob/main/doc/analysis_passes.md#under-constrained-signal.
+
+circomspect: analyzing template 'UnderconstrainedMultiplier2'
+warning: Using the signal assignment operator `<--` is not necessary here.
+   ┌─ /home/thor/tmp/circom-correctly-constrained/circuits/multiplier.circom:45:5
+   │
+45 │     c <-- intermediary;
+   │     ^^^^^^^^^^^^^^^^^^ The expression assigned to `c` is quadratic.
+   │
+   = Consider rewriting the statement using the constraint assignment operator `<==`.
+   = For more details, see https://github.com/trailofbits/circomspect/blob/main/doc/analysis_passes.md#unnecessary-signal-assignment.
+
+warning: The signal `c` is not constrained by the template.
+   ┌─ /home/thor/tmp/circom-correctly-constrained/circuits/multiplier.circom:41:5
+   │
+41 │     signal output c;
+   │     ^^^^^^^^^^^^^^^ This signal does not occur in a constraint.
+
+warning: Intermediate signals should typically occur in at least two separate constraints.
+   ┌─ /home/thor/tmp/circom-correctly-constrained/circuits/multiplier.circom:42:5
+   │
+42 │     signal intermediary;
+   │     ^^^^^^^^^^^^^^^^^^^ The intermediate signal `intermediary` is declared here.
+43 │
+44 │     intermediary <== a * b;
+   │     ---------------------- The intermediate signal `intermediary` is constrained here.
+   │
+   = For more details, see https://github.com/trailofbits/circomspect/blob/main/doc/analysis_passes.md#under-constrained-signal.
+
+circomspect: analyzing template 'UnusedSignalMultiplier'
+warning: The signal `unused` is not used by the template.
+   ┌─ /home/thor/tmp/circom-correctly-constrained/circuits/multiplier.circom:54:5
+   │
+54 │     signal unused;
+   │     ^^^^^^^^^^^^^ This signal is unused and could be removed.
+   │
+   = For more details, see https://github.com/trailofbits/circomspect/blob/main/doc/analysis_passes.md#unused-variable-or-parameter.
+
+warning: Intermediate signals should typically occur in at least two separate constraints.
+   ┌─ /home/thor/tmp/circom-correctly-constrained/circuits/multiplier.circom:54:5
+   │
+54 │     signal unused;
+   │     ^^^^^^^^^^^^^ The intermediate signal `unused` is declared here.
+   │
+   = For more details, see https://github.com/trailofbits/circomspect/blob/main/doc/analysis_passes.md#under-constrained-signal.
+
+circomspect: 7 issues found.
+```
+
+### [zksecurity circomscribe - demo playground, visualize constraints ](https://www.circomscribe.dev/)
+Circomscribe is the circom compiler, run in WASM in the browser in an online playground tool. The tool emits information about the circom compilation process. This is a clunky workflow, copy pasting code into a browser. 
+
+The main context where this tool could be useful would be to see explicitly what constraints are produced by circom snippet, which could be useful for obtaining greater granularity of depth. This tool would be annoying to use if the template had more than one or two dependency templates.
+
+Run on each of the multipliers in `circuits/multiplier.circom`, Circomscribe produces the following outputs. Note that the underconstrained circuits each only have 1 line of constraint rather than 2.
+```ts
+(- 1 * Multiplier.a )*(Multiplier.b ) = - 1 * Multiplier.intermediary
+- 1 * Multiplier.c + Multiplier.intermediary = 0
+
+(- 1 * OverconstrainedMultiplier.a )*(OverconstrainedMultiplier.b ) = - 1 * OverconstrainedMultiplier.intermediary
+- 1 * OverconstrainedMultiplier.c + OverconstrainedMultiplier.intermediary = 0
+
+- 1 * UnderconstrainedMultiplier1.c + UnderconstrainedMultiplier1.intermediary = 0
+
+(- 1 * UnderconstrainedMultiplier2.a )*(UnderconstrainedMultiplier2.b ) = - 1 * UnderconstrainedMultiplier2.intermediary 
+```
+
+Circomscribe's announcement blog post briefly introduces the tool.
+- [blog post about circomscribe](https://www.zksecurity.xyz/blog/posts/circomscribe/)
+
+
 
 ## License
 

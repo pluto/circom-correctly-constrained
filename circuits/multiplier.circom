@@ -46,7 +46,7 @@ template UnderconstrainedMultiplier2() {
     assert(c == a * b);
 }
 
-template UnderconstrainedMultiplier3() {
+template UnusedSignalMultiplier() {
     signal input a;
     signal input b;
     signal output c;
