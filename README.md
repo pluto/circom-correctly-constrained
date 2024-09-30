@@ -40,6 +40,20 @@ This repo is a reference on correctly testing and constraining circom circuits, 
 - [0xparc: circom workshop series](https://learn.0xparc.org/materials/circom/learning-group-1/intro-zkp)
 - [paper by veridise on underconstrained circuits](https://eprint.iacr.org/2023/512.pdf)
 
+## State of the Tools 
+
+### [circomspect static analyzer and linter for circom](https://github.com/trailofbits/circomspect)
+`circomspect` is a static analyzer and linter for Circom.
+- install: `cargo install circomspect`
+- run: `circomspect $CIRCUIT_PATH`
+    - e.g.: `circomspect circuits/multiplier.circom`. `circomspect` will flag underconstrained templates, but will not flag the overconstrained circuit.
+
+More about circomspect by Trail of Bits. These blog posts briefly describe the tool and a few of the passes performed by `circomspect`. They are summaries of the `circomspect` in context, but not important for using the tool.
+- [ToB blog: it pays to be circomspect](https://blog.trailofbits.com/2022/09/15/it-pays-to-be-circomspect/)
+- [ToB blog: circomspect has more passes](https://blog.trailofbits.com/2023/03/21/circomspect-static-analyzer-circom-more-passes/)
+
+It would be good if there were CI to run circomspect, but that does not currently seem to be available.
+
 ## License
 
 Licensed under the Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)

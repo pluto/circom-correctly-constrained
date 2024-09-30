@@ -9,8 +9,18 @@ template Multiplier() {
     // Constraint: a * b should equal c
     intermediary <== a * b;
     c <== intermediary;
+}
 
-    // Assert correctness of intermediary calculation
+template OverconstrainedMultiplier() {
+    signal input a;
+    signal input b;
+    signal output c;
+    signal intermediary;
+
+    intermediary <== a * b;
+    c <== intermediary;
+
+    // Overconstrained: duplicates above constraint
     assert(c == a * b);
 }
 
@@ -41,9 +51,10 @@ template UnderconstrainedMultiplier3() {
     signal input b;
     signal output c;
     signal intermediary;
+    signal unused;
 
     intermediary <== a * b;
     c <== intermediary;
-    // assert(c == a * b);
+    assert(c == a * b);
 }
 
