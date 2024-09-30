@@ -1,0 +1,12 @@
+target
+/.vscode
+circomlib
+node_modules/*
+build/*
+ptau/*
+client/node_modules
+client/static/build
+# ignore circomkit-generated .circom files
+circuits/test/**/*.circom
+circuits/test/*.circom
+circuits/main/*
