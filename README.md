@@ -185,6 +185,14 @@ I tried a few things including restarting my Docker daemon, then attempting a bu
 
 It could be worthwhile to come back and try to get this tool to work, but it's hard to say whether the tool is actually user-ready.
 
+## more reading about underconstrained circuits
+- [circom constraining docs](https://docs.circom.io/circom-language/constraint-generation/)
+- [veridise blog: circom pairing](https://medium.com/veridise/circom-pairing-a-million-dollar-zk-bug-caught-early-c5624b278f25)
+- [dacian: exploiting under-constrained zk circuits](https://dacian.me/exploiting-under-constrained-zk-circuits)
+- [blockdev: tips for safe circom circuits](https://hackmd.io/@blockdev/Bk_-jRkXa)
+- [circom101 book by erhant, author of circomkit](https://github.com/erhant/circom101/tree/main)
+- [0xparc: circom workshop series](https://learn.0xparc.org/materials/circom/learning-group-1/intro-zkp)
+- [paper by veridise on underconstrained circuits](https://eprint.iacr.org/2023/512.pdf)
 
 ## License
 
