@@ -2,18 +2,6 @@
   A succinct reference to correctly constraining circuits
 </h1>
 
-<!-- <div align="center"> -->
-  <!-- <a href="https://github.com/pluto/circom-correctly-constrained/graphs/contributors"> -->
-  <!--   <img src="https://img.shields.io/github/contributors/pluto/circom-correctly-constrained?style=flat-square&logo=github&logoColor=8b949e&labelColor=282f3b&color=32c955" alt="Contributors" /> -->
-  <!-- </a> -->
-  <!-- <a href="https://github.com/pluto/circom-correctly-constrained/actions/workflows/circom.yaml"> -->
-    <!-- <img src="https://img.shields.io/badge/tests-passing-32c955?style=flat-square&logo=github-actions&logoColor=8b949e&labelColor=282f3b" alt="Tests" /> -->
-  <!-- </a> -->
-  <!-- <a href="https://github.com/pluto/circom-correctly-constrained/actions/workflows/lint.yaml"> -->
-    <!-- <img src="https://img.shields.io/badge/lint-passing-32c955?style=flat-square&logo=github-actions&logoColor=8b949e&labelColor=282f3b" alt="Lint" /> -->
-  <!-- </a> -->
-<!-- </div> -->
-
 ## Overview
 This repo is a reference on correctly testing and constraining circom circuits, with example workflows and reference patterns.
 
@@ -61,7 +49,7 @@ warning[CA01]: In template "UnderconstrainedMultiplier1()": Local signal a does 
 ```
 
 ### [circomspect static analyzer and linter for circom](https://github.com/trailofbits/circomspect)
-`circomspect` is a static analyzer and linter for Circom.
+`circomspect` is a static analyzer and linter for Circom, similar to `circom --inspect`, but with a greater area of checks, and more verbose error logs.
 - install: `cargo install circomspect`
 - run: `circomspect $CIRCUIT_PATH`
     - e.g.: `circomspect circuits/multiplier.circom`. `circomspect` will flag underconstrained templates, but will not flag the overconstrained circuit.
@@ -188,6 +176,141 @@ ERROR: failed to solve: process "/bin/bash -c raco make picus.rkt" did not compl
 I tried a few things including restarting my Docker daemon, then attempting a build from scratch by installing z3 and cvc5, but these took too long, so I'm moving on after leaving an issue. Just kidding, they disabled issues for their repo, big oof.
 
 It could be worthwhile to come back and try to get this tool to work, but it's hard to say whether the tool is actually user-ready.
+
+## Everything you should know about correctly assigning constraints
+
+### the basics
+Circom allows the developer to specify constraints in two ways:
+```rust
+// 1. equality constraint operators: ===, <==, ==> 
+signal_b <== signal_or_var_a;
+// the above line is equivalent to the following two lines:
+signal_b <-- signal_or_var_a; // assigns, but does not constrain
+signal_b === signal_or_var_a;
+
+// 2. the assert keyword
+// if all values are known at compile-time the assertion is checked then
+// otherwise, the assertion creates a constraint.
+assert(a <= b);
+assert(a * a == b);
+```
+
+Recall that, due to the construction of the R1CS circuit layout, Circom cannot express greater-than-quadratic constraints:
+- this is fine: `assert(a*a == b)`
+- this is a cubic constraint (no go): `assert(a*a*a == b)
+
+so we may express higher degree constraints as such:
+```rust
+a2 <== a*a;
+a2*a === b; // equivalently, assert(a2*a == b);
+```
+
+### when may a developer choose to use `<--` assignment over `<==`?
+> assigning a value to a signal using <-- and --> is considered dangerous and should, in general, be combined with adding constraints with \=\=\=, which describe by means of constraints which the assigned values are. 
+> https://docs.circom.io/circom-language/constraint-generation/
+
+As stated in the circom docs, generally avoid using `<--`, at least until an optimization code pass. The operator may save a small number of gates, but risks underconstraining the circuit. A developer may incorrectly use `<--` to allow assignment for would-be non-quadratic assignments; this is a [footgun](https://en.wiktionary.org/wiki/footgun).
+
+Use of `<--` is can allow the developer to reason extra constraints out of their circuits, thereby improving proving times. When optimizing code with `<--`, use tools like `circom --inspect` (which searches the codebase for `<--` that can be transformed into `<==`) and `circomspect` to check for correctly constrained circuits.
+
+Documentation as to how to correctly use `<--` is sparse, but as best as this author can infer, there are essentially two reasons to use assignment without assertion:
+1. **avoid unnecessary constraints on intermediate calculations**
+2. **defer constraint checks to a final value assertion**
+3. **check a more general constraint**
+
+Two examples applying `<--` are given in the [circom documentation](https://docs.circom.io/circom-language/basic-operators/#examples-using-operators-from-the-circom-library).
+
+#### circom docs example 1: avoid unnecessary constraints on intermediate calculations
+```rust
+pragma circom 2.0.0;
+
+template IsZero() {
+    signal input in;
+    signal output out;
+    signal inv;
+    // avoid unnecessary constraint on intermediate signal inv
+    // recall: / is multiplication by the inverse modulo p
+    inv <-- in!=0 ? 1/in : 0; 
+    out <== -in*inv +1;
+    in*out === 0;
+}
+component main {public [in]}= IsZero();
+```
+
+> This template checks if the input signal `in` is `0`. In case it is, the value of output signal`out` is `1`. `0`, otherwise. Note here that we use the intermediate signal `inv` to compute the inverse of the value of `in` or `0` if it does not exist. If `in`is 0, then `in*inv` is 0, and the value of `out` is `1`. Otherwise, `in*inv` is always `1`, then `out` is `0`.
+
+That is, this template computes the function:
+$$\text{out} =\cases{1 &\text{if in = 0}\\ 0 & \text{if in $\ne$ 0 }}$$
+Which can be expressed in two constraints; assigning a value to `out` from the value of `in`, and checking that the value assigned matches the function described above.
+
+The value of `inv` is an intermediate calculation, and does not require a constraint.
+
+#### circom docs example 2: check a more general constraint, and defer constraint checks
+```rust
+pragma circom 2.0.0;
+
+template Num2Bits(n) {
+    signal input in;
+    signal output out[n];
+    var lc1=0;
+    var e2=1;
+    for (var i = 0; i<n; i++) {
+        // check a more general constraint than assignment
+        // namely that out[i] is binary
+        out[i] <-- (in >> i) & 1;
+        out[i] * (out[i] -1 ) === 0;
+
+        lc1 += out[i] * e2;
+        e2 = e2+e2;
+    }
+    // deferred constraint check of out
+    // checks the value assignments of out, as lc1 is computed from out
+    lc1 === in;
+}
+component main {public [in]}= Num2Bits(3);
+```
+
+> This templates returns a n-dimensional array with the value of `in` in binary. Line 7 uses the right shift `>>` and operator `&` to obtain at each iteration the `i` component of the array. Finally, line 12 adds the constraint `lc1 = in` to guarantee that the conversion is well done.
+
+That is, the constraints for this template can be specified more succinctly than simply checking for assignment. The circomlib implementation checks that:
+- `out[i]` is binary (this could be stated even more succinctly with the `binary` tag in circom 2.1.0) 
+- `out`'s assignments are accumulated in var `lc1`, which is value-checked at template's end.
+
+#### example 3: further examples
+```rust
+template QuadraticIntermediate() {
+    // Intermediate calculations
+    signal input x;
+    signal output y; // = x*x+x+1
+    signal squareX;
+
+    squareX <-- x * x; 
+    y <== squareX + x + 1; // includes check that x*x == squareX
+} 
+
+// By comparison, this template DOES require an intermediate constraint
+// to avoid enforcing non-linear constraints.
+template CubicIntermediate() {
+    signal input x;
+    signal output y; // = x*x*x + x + 1
+    signal sqX;
+
+    // sqX <-- x * x; // leads to non-linear constraint in final line
+    sqX <== x * x;
+    y <== sqX * x + x + 1; 
+}
+
+template IsEven() {
+    signal input bigNumber;
+    signal output isEven;
+    signal remainder;
+
+    // assign the intermediate value without constraint:
+    remainder <-- bigNumber % 2;
+    // enforce the constraint we actually want to check:
+    isEven <== 1 - remainder;
+}
+```
 
 ## more reading about underconstrained circuits
 - [circom constraining docs](https://docs.circom.io/circom-language/constraint-generation/)
