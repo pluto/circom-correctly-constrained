@@ -17,30 +17,48 @@
 ## Overview
 This repo is a reference on correctly testing and constraining circom circuits, with example workflows and reference patterns.
 
-### Tools and resources considered
+TLDR: use `circom --inspect $circuit_path` and `circomspect $circuit_path` for automated circuit underconstraint static analysis, and `circomkit` for testing.
 
-#### tools
-- [circomkit circom testing suite](https://github.com/erhant/circomkit)
-    - [examples](https://github.com/erhant/circomkit-examples)
-- [circomspect static analyzer and linter for circom](https://github.com/trailofbits/circomspect)
-    - [ToB blog: it pays to be circomspect](https://blog.trailofbits.com/2022/09/15/it-pays-to-be-circomspect/)
-    - [ToB blog: circomspect has more passes](https://blog.trailofbits.com/2023/03/21/circomspect-static-analyzer-circom-more-passes/)
-- [zksecurity circomscribe - demo playground, visualize constraints ](https://www.circomscribe.dev/)
-    - [blog post about circomscribe](https://www.zksecurity.xyz/blog/posts/circomscribe/)
-- [Picus QED uniqueness property underconstraint checker](https://github.com/Veridise/Picus)
-- [circom-mutator](https://github.com/aviggiano/circom-mutator) - test whether mutations of correct circuit actually fail by fuzzing
+## Recommended Tools
 
-#### more reading about underconstrained circuits
-- [circom constraining docs](https://docs.circom.io/circom-language/constraint-generation/)
-- [circom docs: --inspect option](https://docs.circom.io/circom-language/code-quality/inspect/)
-- [veridise blog: circom pairing](https://medium.com/veridise/circom-pairing-a-million-dollar-zk-bug-caught-early-c5624b278f25)
-- [dacian: exploiting under-constrained zk circuits](https://dacian.me/exploiting-under-constrained-zk-circuits)
-- [blockdev: tips for safe circom circuits](https://hackmd.io/@blockdev/Bk_-jRkXa)
-- [circom101 book by erhant, author of circomkit](https://github.com/erhant/circom101/tree/main)
-- [0xparc: circom workshop series](https://learn.0xparc.org/materials/circom/learning-group-1/intro-zkp)
-- [paper by veridise on underconstrained circuits](https://eprint.iacr.org/2023/512.pdf)
+###  [circom docs: --inspect option](https://docs.circom.io/circom-language/code-quality/inspect/)
+The circom compiler has an option to look for underconstrained templates and unused signals. It requires little setup, beyond specifying a main component.
 
-## State of the Tools 
+The linked documentation is one of the better guides I've seen on how to guide the compiler how to properly constrain circuits, or else tell the compiler that a signal is unimportant to constrain.
+
+Usage:
+```sh 
+# with UnusedSignalMultiplier as main
+❯ mkdir target 
+❯ circom --inspect circuits/multiplier.circom -o target
+warning[CA01]: In template "UnusedSignalMultiplier()": Local signal unused does not appear in any constraint
+
+# with UnderconstrainedMultiplier2 as main
+warning[T3002]: Consider using <== instead of <-- to add the corresponding constraint.
+ The constraint representing the assignment satisfies the R1CS format and can be added to the constraint system.
+   ┌─ "circuits/multiplier.circom":45:5
+   │
+45 │     c <-- intermediary;
+   │     ^^^^^^^^^^^^^^^^^^ found here
+   │
+   = call trace:
+     ->UnderconstrainedMultiplier2
+
+warning[CA01]: In template "UnderconstrainedMultiplier2()": Local signal c does not appear in any constraint
+
+# with UnderconstrainedMultiplier1 as main
+warning[T3002]: Consider using <== instead of <-- to add the corresponding constraint.
+ The constraint representing the assignment satisfies the R1CS format and can be added to the constraint system.
+   ┌─ "circuits/multiplier.circom":33:5
+   │
+33 │     intermediary <-- a * b;
+   │     ^^^^^^^^^^^^^^^^^^^^^^ found here
+   │
+   = call trace:
+     ->UnderconstrainedMultiplier1
+
+warning[CA01]: In template "UnderconstrainedMultiplier1()": Local signal a does not appear in any constraint
+```
 
 ### [circomspect static analyzer and linter for circom](https://github.com/trailofbits/circomspect)
 `circomspect` is a static analyzer and linter for Circom.
@@ -50,7 +68,7 @@ This repo is a reference on correctly testing and constraining circom circuits, 
 
 `circomspect` seems powerful and straightforward to use, requiring very little extra context for the developer to use the tool.
 
-More about circomspect by Trail of Bits, in a few blog posts. These blog posts briefly describe the tool and a few of the passes performed by `circomspect`. They are summaries of the `circomspect` in context, but not important for using the tool.
+More about `circomspect` by Trail of Bits, in a few blog posts. These blog posts briefly describe the tool and a few of the passes performed by `circomspect`. They are summaries of the `circomspect` in context, but not important for using the tool.
 - [ToB blog: it pays to be circomspect](https://blog.trailofbits.com/2022/09/15/it-pays-to-be-circomspect/)
 - [ToB blog: circomspect has more passes](https://blog.trailofbits.com/2023/03/21/circomspect-static-analyzer-circom-more-passes/)
 
@@ -130,6 +148,12 @@ warning: Intermediate signals should typically occur in at least two separate co
 circomspect: 7 issues found.
 ```
 
+### [circomkit circom testing suite](https://github.com/erhant/circomkit)
+todo
+
+## Not recommended
+The following tools were examined and found eclipsed in utility by other tools (circomscribe), failed to build (picus), or exceedingly complex to understand [(circom-mutator)](https://github.com/aviggiano/circom-mutator).
+
 ### [zksecurity circomscribe - demo playground, visualize constraints ](https://www.circomscribe.dev/)
 Circomscribe is the circom compiler, run in WASM in the browser in an online playground tool. The tool emits information about the circom compilation process. This is a clunky workflow, copy pasting code into a browser. 
 
@@ -150,8 +174,6 @@ Run on each of the multipliers in `circuits/multiplier.circom`, Circomscribe pro
 
 Circomscribe's announcement blog post briefly introduces the tool.
 - [blog post about circomscribe](https://www.zksecurity.xyz/blog/posts/circomscribe/)
-
-
 
 ### [Picus QED uniqueness property underconstraint checker](https://github.com/Veridise/Picus)
 Picus is a tool by Veridise for checking under-constrained signals of circuits. I couldn't install Picus (in a half hour of trying). The docker build script fails for me with error:

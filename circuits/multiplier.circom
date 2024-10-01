@@ -58,3 +58,8 @@ template UnusedSignalMultiplier() {
     assert(c == a * b);
 }
 
+// component main = Multiplier();
+// component main = OverconstrainedMultiplier();
+component main = UnderconstrainedMultiplier1();
+// component main = UnderconstrainedMultiplier2();
+// component main = UnusedSignalMultiplier();
