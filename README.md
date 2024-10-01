@@ -149,7 +149,11 @@ circomspect: 7 issues found.
 ```
 
 ### [circomkit circom testing suite](https://github.com/erhant/circomkit)
-todo
+A typescript-based suite of testing tools for circom. The circomkit readme does a better job of summarizing the tool than I could here.
+
+Circomkit theoretically could be used to [test passing and failing witnesses](https://github.com/erhant/circomkit?tab=readme-ov-file#witness-tester) for circuits, though this seems inelegant as provided, and seems really only designed for one-off soundness checks.
+
+See the [short circomkit usage example in this repo](https://github.com/pluto/circom-correctly-constrained/blob/main/circuits/test/multiplier.test.ts) for a demonstration of circomkit, or [circomkit-examples](https://github.com/erhant/circomkit-examples) for further examples.
 
 ## Not recommended
 The following tools were examined and found eclipsed in utility by other tools (circomscribe), failed to build (picus), or exceedingly complex to understand [(circom-mutator)](https://github.com/aviggiano/circom-mutator).
