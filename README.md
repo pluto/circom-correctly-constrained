@@ -7,6 +7,8 @@ This repo is a reference on correctly testing and constraining circom circuits, 
 
 TLDR: use `circom --inspect $circuit_path` and `circomspect $circuit_path` for automated circuit underconstraint static analysis, and `circomkit` for testing.
 
+Skim down to "Everything you should know..." for a primer for circom authors on constraining and optimizing circuits.
+
 ## Recommended Tools
 
 ###  [circom docs: --inspect option](https://docs.circom.io/circom-language/code-quality/inspect/)
@@ -49,7 +51,8 @@ warning[CA01]: In template "UnderconstrainedMultiplier1()": Local signal a does 
 ```
 
 ### [circomspect static analyzer and linter for circom](https://github.com/trailofbits/circomspect)
-`circomspect` is a static analyzer and linter for Circom, similar to `circom --inspect`, but with a greater area of checks, and more verbose error logs.
+ `circomspect` is a static analyzer and linter for Circom, similar to `circom --inspect`, but with a greater area of checks, and more verbose error logs.
+
 - install: `cargo install circomspect`
 - run: `circomspect $CIRCUIT_PATH`
     - e.g.: `circomspect circuits/multiplier.circom`. `circomspect` will flag underconstrained templates, but will not flag the overconstrained circuit.
@@ -152,7 +155,7 @@ Circomscribe is the circom compiler, run in WASM in the browser in an online pla
 The main context where this tool could be useful would be to see explicitly what constraints are produced by circom snippet, which could be useful for obtaining greater granularity of depth. This tool would be annoying to use if the template had more than one or two dependency templates.
 
 Run on each of the multipliers in `circuits/multiplier.circom`, Circomscribe produces the following outputs. Note that the underconstrained circuits each only have 1 line of constraint rather than 2.
-```ts
+```sh
 (- 1 * Multiplier.a )*(Multiplier.b ) = - 1 * Multiplier.intermediary
 - 1 * Multiplier.c + Multiplier.intermediary = 0
 
@@ -176,6 +179,9 @@ ERROR: failed to solve: process "/bin/bash -c raco make picus.rkt" did not compl
 I tried a few things including restarting my Docker daemon, then attempting a build from scratch by installing z3 and cvc5, but these took too long, so I'm moving on after leaving an issue. Just kidding, they disabled issues for their repo, big oof.
 
 It could be worthwhile to come back and try to get this tool to work, but it's hard to say whether the tool is actually user-ready.
+
+### Backlog list of further tools to examine
+- [Ecne - an engine for verifying R1CS soundness](https://github.com/franklynwang/EcneProject)
 
 ## Everything you should know about correctly assigning constraints
 
@@ -312,14 +318,23 @@ template IsEven() {
 }
 ```
 
-## more reading about underconstrained circuits
-- [circom constraining docs](https://docs.circom.io/circom-language/constraint-generation/)
-- [veridise blog: circom pairing](https://medium.com/veridise/circom-pairing-a-million-dollar-zk-bug-caught-early-c5624b278f25)
-- [dacian: exploiting under-constrained zk circuits](https://dacian.me/exploiting-under-constrained-zk-circuits)
-- [blockdev: tips for safe circom circuits](https://hackmd.io/@blockdev/Bk_-jRkXa)
-- [circom101 book by erhant, author of circomkit](https://github.com/erhant/circom101/tree/main)
-- [0xparc: circom workshop series](https://learn.0xparc.org/materials/circom/learning-group-1/intro-zkp)
-- [paper by veridise on underconstrained circuits](https://eprint.iacr.org/2023/512.pdf)
+## further reading about underconstrained circuits
+
+### recommended short reading
+- [0xPARC ZK bug tracker](https://github.com/0xPARC/zk-bug-tracker) - a list of bugs and exploits found in zk applications. The list of [common vulnerabilities](https://github.com/0xPARC/zk-bug-tracker?tab=readme-ov-file#common-vulnerabilities-1) is particularly worth reviewing.
+- [dacian: exploiting under-constrained zk circuits](https://dacian.me/exploiting-under-constrained-zk-circuits) - a walkthrough of correctly constraining a circom template that a value is not prime. Examples provided for:
+    - asserting inputs values are not equal to one
+    - range checking for to prevent multiplication overflow
+- [circom constraint generation docs](https://docs.circom.io/circom-language/constraint-generation/) - an introduction to how constraints are generated; overlaps with the *basics* section given above.
+
+### recommended longer reading
+- [circom101 book by erhant, author of circomkit](https://circom.erhant.me/) - Erhant's book is good supplementary material for the circom documentation, and details the implementation of several optimized circom templates.
+- [0xPARC: circom workshop series](https://learn.0xparc.org/materials/circom/learning-group-1/intro-zkp) - a series of videos on zero knowledge generally, and circom in particular
+
+### also reviewed in preparation for this post
+- [veridise blog: circom pairing](https://medium.com/veridise/circom-pairing-a-million-dollar-zk-bug-caught-early-c5624b278f25) - somewhat in the weeds audit by Veridise found a bug in the `circom-pairing` library. The bug involves somewhat in-the-weeds elliptic curve cryptography trivia; namely than the output of a custom comparator, `BigLessThan`, is unconstrained, allowing for inputs to `CoreVerifyPubkeyG1` to accept inputs larger than the curve prime `q`. I didn't take anything away from this post.
+- [blockdev: tips for safe circom circuits](https://hackmd.io/@blockdev/Bk_-jRkXa) - a high level notes pass on circom circuits
+
 
 ## License
 
