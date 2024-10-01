@@ -319,22 +319,25 @@ template IsEven() {
 ```
 
 ## further reading about underconstrained circuits
+The following resources may provide further direction in writing correctly constrained Circom. 
 
 ### recommended short reading
 - [0xPARC ZK bug tracker](https://github.com/0xPARC/zk-bug-tracker) - a list of bugs and exploits found in zk applications. The list of [common vulnerabilities](https://github.com/0xPARC/zk-bug-tracker?tab=readme-ov-file#common-vulnerabilities-1) is particularly worth reviewing.
-- [dacian: exploiting under-constrained zk circuits](https://dacian.me/exploiting-under-constrained-zk-circuits) - a walkthrough of correctly constraining a circom template that a value is not prime. Examples provided for:
-    - asserting inputs values are not equal to one
-    - range checking for to prevent multiplication overflow
-- [circom constraint generation docs](https://docs.circom.io/circom-language/constraint-generation/) - an introduction to how constraints are generated; overlaps with the *basics* section given above.
+- [Circom constraint generation docs](https://docs.circom.io/circom-language/constraint-generation/) - an introduction to how constraints are generated; overlaps with the *basics* section given above.
+- [Circom Anonymous Component documentation](https://docs.circom.io/circom-language/anonymous-components-and-tuples) - Circom 2.1.0 introduced anonymous components. These allow for significantly more concise and expressive syntax in declaring components, reducing risk of developer error.
 
 ### recommended longer reading
 - [circom101 book by erhant, author of circomkit](https://circom.erhant.me/) - Erhant's book is good supplementary material for the circom documentation, and details the implementation of several optimized circom templates.
 - [0xPARC: circom workshop series](https://learn.0xparc.org/materials/circom/learning-group-1/intro-zkp) - a series of videos on zero knowledge generally, and circom in particular
 
 ### also reviewed in preparation for this post
+To save the reader some time in exploring resources, these posts were reviewed in preparation for this post and are briefly summarized for completess, but are not recommended reading.
+
+- [dacian: exploiting under-constrained zk circuits](https://dacian.me/exploiting-under-constrained-zk-circuits) - a walkthrough of correctly constraining a circom template that a value is not prime. Examples provided for:
+    - asserting inputs values are not equal to one
+    - range checking for to prevent multiplication overflow
 - [veridise blog: circom pairing](https://medium.com/veridise/circom-pairing-a-million-dollar-zk-bug-caught-early-c5624b278f25) - somewhat in the weeds audit by Veridise found a bug in the `circom-pairing` library. The bug involves somewhat in-the-weeds elliptic curve cryptography trivia; namely than the output of a custom comparator, `BigLessThan`, is unconstrained, allowing for inputs to `CoreVerifyPubkeyG1` to accept inputs larger than the curve prime `q`. I didn't take anything away from this post.
 - [blockdev: tips for safe circom circuits](https://hackmd.io/@blockdev/Bk_-jRkXa) - a high level notes pass on circom circuits
-
 
 ## License
 
