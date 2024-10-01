@@ -2,17 +2,17 @@
   A succinct reference to correctly constraining circuits
 </h1>
 
-<div align="center">
+<!-- <div align="center"> -->
   <!-- <a href="https://github.com/pluto/circom-correctly-constrained/graphs/contributors"> -->
   <!--   <img src="https://img.shields.io/github/contributors/pluto/circom-correctly-constrained?style=flat-square&logo=github&logoColor=8b949e&labelColor=282f3b&color=32c955" alt="Contributors" /> -->
   <!-- </a> -->
-  <a href="https://github.com/pluto/circom-correctly-constrained/actions/workflows/test.yaml">
-    <img src="https://img.shields.io/badge/tests-passing-32c955?style=flat-square&logo=github-actions&logoColor=8b949e&labelColor=282f3b" alt="Tests" />
-  </a>
-  <a href="https://github.com/pluto/circom-correctly-constrained/actions/workflows/lint.yaml">
-    <img src="https://img.shields.io/badge/lint-passing-32c955?style=flat-square&logo=github-actions&logoColor=8b949e&labelColor=282f3b" alt="Lint" />
-  </a>
-</div>
+  <!-- <a href="https://github.com/pluto/circom-correctly-constrained/actions/workflows/circom.yaml"> -->
+    <!-- <img src="https://img.shields.io/badge/tests-passing-32c955?style=flat-square&logo=github-actions&logoColor=8b949e&labelColor=282f3b" alt="Tests" /> -->
+  <!-- </a> -->
+  <!-- <a href="https://github.com/pluto/circom-correctly-constrained/actions/workflows/lint.yaml"> -->
+    <!-- <img src="https://img.shields.io/badge/lint-passing-32c955?style=flat-square&logo=github-actions&logoColor=8b949e&labelColor=282f3b" alt="Lint" /> -->
+  <!-- </a> -->
+<!-- </div> -->
 
 ## Overview
 This repo is a reference on correctly testing and constraining circom circuits, with example workflows and reference patterns.
