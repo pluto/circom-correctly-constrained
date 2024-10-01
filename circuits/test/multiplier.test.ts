@@ -2,7 +2,7 @@
 // circomkit: https://github.com/erhant/circomkit
 // more examples: https://github.com/erhant/circomkit-examples
 
-import { assert } from "chai";
+// import { assert } from "chai";
 import { Circomkit, WitnessTester } from "circomkit";
 import "mocha";
 
@@ -14,11 +14,11 @@ export const circomkit = new Circomkit({
 // 2. test. 
 // Use WitnessTester to declare circuit inputs and outputs. 
 // Use a `before` block to set up the circuit once, and use `it` blocks to test different cases.
-describe("ToBlocks", () => {
+describe("test Multiplier", () => {
   let circuit: WitnessTester<["a", "b"], ["c"]>;
 
   before(async () => {
-    circuit = await circomkit.WitnessTester(`ToBlocks`, {
+    circuit = await circomkit.WitnessTester(`Multiplier`, {
       file: "multiplier",
       template: "Multiplier",
       // params: [],
@@ -26,7 +26,7 @@ describe("ToBlocks", () => {
     console.log("#constraints:", await circuit.getConstraintCount());
   });
 
-  it("test multiplier", async () => {
+  it("multiplier 1", async () => {
     const a = 2;
     const b = 3;
     const c = 6;

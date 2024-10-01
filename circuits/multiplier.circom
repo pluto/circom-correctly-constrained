@@ -60,6 +60,6 @@ template UnusedSignalMultiplier() {
 
 // component main = Multiplier();
 // component main = OverconstrainedMultiplier();
-component main = UnderconstrainedMultiplier1();
+// component main = UnderconstrainedMultiplier1();
 // component main = UnderconstrainedMultiplier2();
 // component main = UnusedSignalMultiplier();
