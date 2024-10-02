@@ -2,6 +2,27 @@
   A succinct reference to correctly constraining circuits
 </h1>
 
+## Table of Contents
+- [Overview](#overview)
+- [Recommended Tools](#recommended-tools)
+  - [circom docs: --inspect option](#circom-docs---inspect-option)
+  - [circomspect static analyzer and linter for circom](#circomspect-static-analyzer-and-linter-for-circom)
+  - [circomkit circom testing suite](#circomkit-circom-testing-suite)
+- [Not recommended](#not-recommended)
+  - [zksecurity circomscribe - demo playground, visualize constraints](#zksecurity-circomscribe---demo-playground-visualize-constraints-)
+  - [Picus QED uniqueness property underconstraint checker](#picus-qed-uniqueness-property-underconstraint-checker)
+  - [Backlog list of further tools to examine](#backlog-list-of-further-tools-to-examine)
+- [Everything you should know about correctly assigning constraints](#everything-you-should-know-about-correctly-assigning-constraints)
+  - [The basics](#the-basics)
+  - [When may a developer choose to use `<--` assignment over `<==`?](#when-may-a-developer-choose-to-use----assignment-over-)
+- [Common mistakes in underconstraining circuits](#common-mistakes-in-underconstraining-circuits)
+- [Further Reading](#further-reading)
+  - [Recommended short reading](#recommended-short-reading)
+  - [Recommended longer reading](#recommended-longer-reading)
+  - [Also reviewed in preparation for this post](#also-reviewed-in-preparation-for-this-post)
+- [License](#license)
+- [Contributing](#contributing)
+
 ## Overview
 This repo is a reference on correctly testing and constraining circom circuits, with example workflows and reference patterns.
 
